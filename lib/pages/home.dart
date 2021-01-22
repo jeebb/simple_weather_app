@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:simple_weather_app/models/location_data.dart';
 import 'package:simple_weather_app/models/weather_info.dart';
 import 'package:simple_weather_app/pages/city_lookup.dart';
 import 'package:simple_weather_app/widgets/weather_card.dart';
@@ -70,15 +71,15 @@ class _WeatherHomePage extends State<WeatherHomePage> {
       );
 
   void _openAddDialog() async {
-    final selectedCity = await Navigator.of(context).push<String>(
+    final selectedLocation = await Navigator.of(context).push<LocationData>(
       MaterialPageRoute(
         builder: (_) => CityLookupPage(),
         fullscreenDialog: true,
       ),
     );
 
-    if (selectedCity != null) {
-      print('Selected city: $selectedCity');
+    if (selectedLocation != null) {
+      print('Selected location: $selectedLocation');
       // TODO: add a new weather card for it
     }
   }

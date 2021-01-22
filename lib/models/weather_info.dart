@@ -3,7 +3,7 @@ class WeatherInfo {
   final String condition;
   final String icon;
   final double temperatureInCelcius;
-  final double humidity;
+  final int humidity;
 
   WeatherInfo({
     this.city,

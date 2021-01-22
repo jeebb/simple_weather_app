@@ -1,4 +1,6 @@
-class WeatherInfo {
+import 'package:equatable/equatable.dart';
+
+class WeatherInfo extends Equatable {
   final String city;
   final String condition;
   final String icon;
@@ -18,4 +20,13 @@ class WeatherInfo {
 
   String get description =>
       '$condition - $temperatureInCelcius °C - $humidity%';
+
+  @override
+  List<Object> get props => [
+        city,
+        condition,
+        icon,
+        temperatureInCelcius,
+        humidity,
+      ];
 }

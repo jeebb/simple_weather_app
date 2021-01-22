@@ -1,5 +1,6 @@
 import 'package:country_state_city_picker/country_state_city_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:simple_weather_app/models/location_data.dart';
 
 class CityLookupPage extends StatefulWidget {
   @override
@@ -7,7 +8,7 @@ class CityLookupPage extends StatefulWidget {
 }
 
 class _CityLookupPageState extends State<CityLookupPage> {
-  String _selectedCity;
+  LocationData _selectedLocation;
 
   var _selectKey = UniqueKey();
 
@@ -27,10 +28,19 @@ class _CityLookupPageState extends State<CityLookupPage> {
               SelectState(
                 // add a key for resetting the values when tapping on 'Reset'
                 key: _selectKey,
-                onCountryChanged: (_) => _selectedCity = null,
-                onStateChanged: (_) => _selectedCity = null,
+                onCountryChanged: (country) {
+                  _selectedLocation = LocationData(
+                    country: country
+                        .replaceAll(RegExp(r'[^a-zA-Z0-9\s\(\)]'), '')
+                        .trim(),
+                  );
+                },
+                onStateChanged: (state) {
+                  _selectedLocation.state = state;
+                  _selectedLocation.city = null;
+                },
                 onCityChanged: (city) => setState(() {
-                  _selectedCity = city;
+                  _selectedLocation.city = city;
                 }),
               ),
               Row(
@@ -40,8 +50,8 @@ class _CityLookupPageState extends State<CityLookupPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 5),
                     child: RaisedButton(
                       child: Text('Add'),
-                      onPressed: _selectedCity != null &&
-                              _selectedCity != 'Choose City'
+                      onPressed: _selectedLocation != null &&
+                              _selectedLocation.city != 'Choose City'
                           ? _onAddingCity
                           : null,
                     ),
@@ -52,7 +62,7 @@ class _CityLookupPageState extends State<CityLookupPage> {
                       child: Text('Reset'),
                       onPressed: () => setState(() {
                         _selectKey = UniqueKey();
-                        _selectedCity = null;
+                        _selectedLocation = null;
                       }),
                     ),
                   ),
@@ -63,5 +73,5 @@ class _CityLookupPageState extends State<CityLookupPage> {
         ),
       );
 
-  void _onAddingCity() => Navigator.pop(context, _selectedCity);
+  void _onAddingCity() => Navigator.pop(context, _selectedLocation);
 }

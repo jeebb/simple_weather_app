@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:simple_weather_app/pages/bloc/weather_bloc.dart';
 import 'package:simple_weather_app/pages/home.dart';
 
 void main() {
@@ -14,6 +16,9 @@ class WeatherApp extends StatelessWidget {
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
         debugShowCheckedModeBanner: false,
-        home: WeatherHomePage(),
+        home: BlocProvider(
+          create: (_) => WeatherBloc(),
+          child: WeatherHomePage(),
+        ),
       );
 }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:simple_weather_app/models/location_data.dart';
-import 'package:simple_weather_app/models/weather_info.dart';
+import 'package:simple_weather_app/pages/bloc/weather_bloc.dart';
+import 'package:simple_weather_app/pages/bloc/weather_event.dart';
+import 'package:simple_weather_app/pages/bloc/weather_state.dart';
 import 'package:simple_weather_app/pages/city_lookup.dart';
 import 'package:simple_weather_app/widgets/weather_card.dart';
 
@@ -10,30 +13,15 @@ class WeatherHomePage extends StatefulWidget {
 }
 
 class _WeatherHomePage extends State<WeatherHomePage> {
-  /// TODO: remove this mocked data after implementing the service
-  final weatherInfoList = <WeatherInfo>[
-    WeatherInfo(
-      city: 'Paris',
-      condition: 'light rain',
-      icon: '10d',
-      temperatureInCelcius: 30,
-      humidity: 50,
-    ),
-    WeatherInfo(
-      city: 'Milan',
-      condition: 'dizzle',
-      icon: '09d',
-      temperatureInCelcius: 32,
-      humidity: 60,
-    ),
-    WeatherInfo(
-      city: 'Lucene',
-      condition: 'Thunderstorm',
-      icon: '11d',
-      temperatureInCelcius: 33,
-      humidity: 66,
-    ),
-  ];
+  WeatherBloc _weatherBloc;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _weatherBloc = BlocProvider.of<WeatherBloc>(context);
+    _weatherBloc.add(FetchDataEvent());
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -52,22 +40,46 @@ class _WeatherHomePage extends State<WeatherHomePage> {
         body: SafeArea(child: _pageBody()),
       );
 
-  Widget _pageBody() => Container(
-        margin: const EdgeInsets.all(20),
-        child: ListView(
-          children: weatherInfoList
-              .map((weather) => Row(
-                    children: [
-                      Expanded(child: WeatherCard(weatherInfo: weather)),
-                      IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () {},
-                        color: Colors.red[200],
-                      ),
-                    ],
-                  ))
-              .toList(),
-        ),
+  Widget _pageBody() => BlocBuilder(
+        cubit: _weatherBloc,
+        builder: (_, state) {
+          if (state is InitializingState) {
+            return Center(child: CircularProgressIndicator());
+          } else if (state is FailureState) {
+            return Center(
+                child: Text(
+              'Something went wrong!',
+              style: TextStyle(color: Colors.red),
+            ));
+          }
+
+          final dataList = (state as DataInitializedState).dataList;
+          if (dataList.isEmpty) {
+            return Center(
+                child: Text(
+              'Location not found',
+              style: TextStyle(color: Colors.grey),
+            ));
+          }
+
+          return Container(
+            margin: const EdgeInsets.all(20),
+            child: ListView(
+              children: dataList
+                  .map((weather) => Row(
+                        children: [
+                          Expanded(child: WeatherCard(weatherInfo: weather)),
+                          IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () {},
+                            color: Colors.red[200],
+                          ),
+                        ],
+                      ))
+                  .toList(),
+            ),
+          );
+        },
       );
 
   void _openAddDialog() async {
@@ -80,7 +92,8 @@ class _WeatherHomePage extends State<WeatherHomePage> {
 
     if (selectedLocation != null) {
       print('Selected location: $selectedLocation');
-      // TODO: add a new weather card for it
+
+      _weatherBloc.add(AddLocationEvent(locationData: selectedLocation));
     }
   }
 }

@@ -1,10 +1,13 @@
 import 'package:bloc/bloc.dart';
 import 'package:simple_weather_app/pages/bloc/weather_event.dart';
 import 'package:simple_weather_app/pages/bloc/weather_state.dart';
+import 'package:simple_weather_app/repository/city_repository.dart';
 import 'package:simple_weather_app/services/weather_service.dart';
 
 class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
   final _weatherService = WeatherService();
+
+  final _cityRepository = CityRepository();
 
   WeatherBloc() : super(InitializingState());
 
@@ -20,8 +23,11 @@ class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
   }
 
   Stream<WeatherState> _handleFetchDataEvent(FetchDataEvent event) async* {
-    // TODO: fetch the added locations and their weather info
-    yield DataInitializedState(dataList: []);
+    final cityIdList = _cityRepository.cityIdList();
+    final weatherInfoList =
+        await _weatherService.fetchWeatherInfoByCityIds(cityIdList: cityIdList);
+
+    yield DataInitializedState(dataList: weatherInfoList);
   }
 
   Stream<WeatherState> _handleAddLocationEvent(AddLocationEvent event) async* {
@@ -31,7 +37,8 @@ class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
 
     final weatherInfo =
         await _weatherService.fetchWeatherInfo(location: event.locationData);
-    // TODO: persist fetched data to local storage
+
+    _cityRepository.saveCityId(cityId: weatherInfo.cityId);
 
     yield (state as DataInitializedState)
         .withAdditionalDataList(additionalDataList: [weatherInfo]);
@@ -42,9 +49,9 @@ class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
   }
 
   @override
-  void onError(error, stackTrace) {
-    super.onError(error, stackTrace);
-
+  void onError(error, [stackTrace]) {
     add(NotifyErrorEvent());
+
+    super.onError(error, stackTrace);
   }
 }
